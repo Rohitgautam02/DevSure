@@ -1,0 +1,77 @@
+// Prisma Schema for DevSure
+// Database: SQLite for dev, PostgreSQL for production
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"  // Change to "postgresql" for production
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER MODEL
+// ============================================
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String    @map("password_hash")
+  name          String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  
+  // Relations
+  projects      Project[]
+
+  @@map("users")
+}
+
+// ============================================
+// PROJECT MODEL
+// ============================================
+model Project {
+  id            String        @id @default(uuid())
+  userId        String        @map("user_id")
+  projectName   String        @map("project_name")
+  inputUrl      String        @map("input_url")
+  status        String        @default("PENDING")  // PENDING, ANALYZING, DONE, FAILED
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+  
+  // Relations
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analysisResult AnalysisResult?
+
+  @@index([userId])
+  @@index([status])
+  @@map("projects")
+}
+
+// ============================================
+// ANALYSIS RESULT MODEL
+// ============================================
+model AnalysisResult {
+  id                String   @id @default(uuid())
+  projectId         String   @unique @map("project_id")
+  
+  // Scores (0-100)
+  overallScore      Int      @map("overall_score")
+  performanceScore  Int      @map("performance_score")
+  errorScore        Int      @map("error_score")
+  durabilityScore   Int      @map("durability_score")
+  
+  // Detailed Results (stored as JSON strings for SQLite compatibility)
+  issues            String   @default("[]")  // Array of issues found (JSON string)
+  suggestions       String   @default("[]")  // Array of improvement suggestions (JSON string)
+  metrics           String   @default("{}")  // Raw metrics data (JSON string)
+  
+  // Metadata
+  analyzedAt        DateTime @default(now()) @map("analyzed_at")
+  analysisTimeMs    Int?     @map("analysis_time_ms")
+  
+  // Relations
+  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("analysis_results")
+}
