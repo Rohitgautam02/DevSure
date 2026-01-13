@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src/",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
@@ -17,7 +20,7 @@
     "testing"
   ],
   "author": "DevSure Team",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "dependencies": {
     "@prisma/client": "^5.7.0",
     "axios": "^1.6.2",
@@ -35,6 +38,10 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "globals": "^17.0.0",
+    "jest": "^30.2.0",
     "nodemon": "^3.0.2",
     "prisma": "^5.7.0"
   },
