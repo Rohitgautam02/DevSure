@@ -35,6 +35,7 @@ model Project {
   userId        String        @map("user_id")
   projectName   String        @map("project_name")
   inputUrl      String        @map("input_url")
+  inputType     String        @default("deployment") @map("input_type")  // "deployment" or "github"
   status        String        @default("PENDING")  // PENDING, ANALYZING, DONE, FAILED
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")
@@ -55,11 +56,32 @@ model AnalysisResult {
   id                String   @id @default(uuid())
   projectId         String   @unique @map("project_id")
   
-  // Scores (0-100)
+  // Overall Score (0-100)
   overallScore      Int      @map("overall_score")
+  
+  // Basic Scores (0-100)
   performanceScore  Int      @map("performance_score")
   errorScore        Int      @map("error_score")
   durabilityScore   Int      @map("durability_score")
+  
+  // Lighthouse Scores (0-100) - from PageSpeed Insights
+  lighthousePerformance   Int?     @map("lighthouse_performance")
+  lighthouseAccessibility Int?     @map("lighthouse_accessibility")
+  lighthouseBestPractices Int?     @map("lighthouse_best_practices")
+  lighthouseSeo           Int?     @map("lighthouse_seo")
+  
+  // Core Web Vitals (JSON string)
+  coreWebVitals     String   @default("{}")  @map("core_web_vitals")
+  
+  // Lighthouse Details (JSON string)
+  lighthouseDetails String   @default("{}")  @map("lighthouse_details")
+  
+  // GitHub Analysis Results (JSON string) - for repo analysis
+  githubAnalysis    String   @default("{}")  @map("github_analysis")
+  
+  // Code Quality Scores (from repo analysis)
+  codeQualityScore  Int?     @map("code_quality_score")
+  securityScore     Int?     @map("security_score")
   
   // Detailed Results (stored as JSON strings for SQLite compatibility)
   issues            String   @default("[]")  // Array of issues found (JSON string)

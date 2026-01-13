@@ -24,6 +24,7 @@ const analyzeUrl = async (url) => {
   const startTime = Date.now();
   
   // Initialize result structure
+  // PESSIMISTIC SCORING: Start at 50, earn points with evidence
   const result = {
     metrics: {
       reachable: false,
@@ -39,11 +40,12 @@ const analyzeUrl = async (url) => {
     issues: [],
     suggestions: [],
     scores: {
-      performance: 100,
-      error: 100,
-      durability: 100,
-      overall: 100
-    }
+      performance: 50,  // Start at 50, not 100
+      error: 50,        // Start at 50, not 100
+      durability: 50,   // Start at 50, not 100
+      overall: 50
+    },
+    analysisConfidence: 'LOW'  // URL analysis has limited depth
   };
 
   try {
@@ -116,6 +118,7 @@ const analyzeUrl = async (url) => {
 
 /**
  * Analyze HTTP status code
+ * PESSIMISTIC: Start at 50, earn points for success
  */
 const analyzeStatusCode = (statusCode, result) => {
   if (statusCode >= 500) {
@@ -126,9 +129,9 @@ const analyzeStatusCode = (statusCode, result) => {
       description: `The server returned a ${statusCode} error. This indicates a server-side problem.`,
       impact: 'Users will see an error page instead of your application.'
     });
-    result.scores.error -= 40;
+    result.scores.error -= 30;  // Penalty
     result.suggestions.push({
-      priority: 'high',
+      priority: 'critical',
       title: 'Fix Server Errors',
       description: 'Check your server logs, ensure your application is running, and verify database connections.',
       category: 'error'
@@ -141,7 +144,7 @@ const analyzeStatusCode = (statusCode, result) => {
       description: `The server returned a ${statusCode} error. The requested resource may not exist or be inaccessible.`,
       impact: 'Users may not be able to access your application.'
     });
-    result.scores.error -= 30;
+    result.scores.error -= 20;  // Penalty
     result.suggestions.push({
       priority: 'high',
       title: 'Fix Access Issues',
@@ -156,8 +159,11 @@ const analyzeStatusCode = (statusCode, result) => {
       description: `The URL redirects to another location (status ${statusCode}).`,
       impact: 'Adds slight latency to page load.'
     });
+    result.scores.error += 20;  // Partial credit - site works
     result.scores.performance -= 5;
   } else if (statusCode === 200 || statusCode === 201) {
+    // EARN points for successful response
+    result.scores.error += 35;  // Big bonus for working!
     result.suggestions.push({
       priority: 'info',
       title: 'HTTP Status OK',
@@ -169,6 +175,7 @@ const analyzeStatusCode = (statusCode, result) => {
 
 /**
  * Analyze response time
+ * PESSIMISTIC: Start at 50, earn points for fast response
  */
 const analyzeResponseTime = (responseTimeMs, result) => {
   if (responseTimeMs > 5000) {
@@ -179,9 +186,9 @@ const analyzeResponseTime = (responseTimeMs, result) => {
       description: `Response time is ${responseTimeMs}ms (over 5 seconds).`,
       impact: 'Users will likely leave before the page loads. Search engines may penalize slow sites.'
     });
-    result.scores.performance -= 30;
+    result.scores.performance -= 25;
     result.suggestions.push({
-      priority: 'high',
+      priority: 'critical',
       title: 'Improve Server Response Time',
       description: 'Consider upgrading hosting, optimizing database queries, implementing caching, or using a CDN.',
       category: 'performance'
@@ -194,11 +201,11 @@ const analyzeResponseTime = (responseTimeMs, result) => {
       description: `Response time is ${responseTimeMs}ms (over 2 seconds).`,
       impact: 'User experience may suffer. Mobile users especially will notice delays.'
     });
-    result.scores.performance -= 15;
+    result.scores.performance -= 10;
     result.suggestions.push({
       priority: 'medium',
       title: 'Optimize Response Time',
-      description: 'Target response times under 1 second. Check for slow database queries or API calls.',
+      description: 'Consider caching, code optimization, or a faster hosting provider.',
       category: 'performance'
     });
   } else if (responseTimeMs > 1000) {
@@ -206,10 +213,16 @@ const analyzeResponseTime = (responseTimeMs, result) => {
       severity: 'minor',
       category: 'performance',
       title: 'Moderate Response Time',
-      description: `Response time is ${responseTimeMs}ms.`,
-      impact: 'Acceptable but could be faster.'
+      description: `Response time is ${responseTimeMs}ms. Aim for under 1 second.`,
+      impact: 'Slightly slower than ideal.'
     });
-    result.scores.performance -= 5;
+    result.scores.performance += 10;  // Some credit
+  } else if (responseTimeMs < 500) {
+    // EARN points for fast response
+    result.scores.performance += 30;  // Big bonus for speed!
+  } else {
+    // 500-1000ms - decent
+    result.scores.performance += 20;
   }
 };
 
@@ -293,6 +306,7 @@ const analyzeContent = (data, headers, result) => {
 
 /**
  * Analyze security aspects
+ * PESSIMISTIC: Start at 50, earn points for security
  */
 const analyzeSecurity = (url, headers, result) => {
   // Check HTTPS
@@ -304,27 +318,40 @@ const analyzeSecurity = (url, headers, result) => {
       description: 'The site is served over HTTP without encryption.',
       impact: 'Data can be intercepted. Browsers show "Not Secure" warning.'
     });
-    result.scores.durability -= 25;
+    result.scores.durability -= 20;
     result.suggestions.push({
       priority: 'critical',
       title: 'Enable HTTPS',
       description: 'Configure SSL/TLS certificate. Most hosting providers offer free SSL via Let\'s Encrypt.',
       category: 'security'
     });
+  } else {
+    // EARN points for HTTPS
+    result.scores.durability += 20;
   }
 
   // Check security headers
   const missingHeaders = [];
+  const presentHeaders = [];
   
   if (!headers['x-frame-options'] && !headers['content-security-policy']) {
     missingHeaders.push('X-Frame-Options');
+  } else {
+    presentHeaders.push('X-Frame-Options or CSP');
   }
   if (!headers['x-content-type-options']) {
     missingHeaders.push('X-Content-Type-Options');
+  } else {
+    presentHeaders.push('X-Content-Type-Options');
   }
   if (!headers['strict-transport-security'] && url.startsWith('https')) {
     missingHeaders.push('Strict-Transport-Security');
+  } else if (headers['strict-transport-security']) {
+    presentHeaders.push('HSTS');
   }
+
+  // Award points for security headers present
+  result.scores.durability += presentHeaders.length * 5;
 
   if (missingHeaders.length > 0) {
     result.issues.push({
@@ -334,7 +361,6 @@ const analyzeSecurity = (url, headers, result) => {
       description: `Missing headers: ${missingHeaders.join(', ')}`,
       impact: 'Reduced protection against certain attacks.'
     });
-    result.scores.durability -= 5;
     result.suggestions.push({
       priority: 'medium',
       title: 'Add Security Headers',
@@ -346,6 +372,7 @@ const analyzeSecurity = (url, headers, result) => {
 
 /**
  * Analyze HTTP headers
+ * PESSIMISTIC: Start at 50, earn points for best practices
  */
 const analyzeHeaders = (headers, result) => {
   // Check for caching headers
@@ -357,13 +384,15 @@ const analyzeHeaders = (headers, result) => {
       description: 'The server does not specify caching behavior.',
       impact: 'Browsers will re-download resources on every visit.'
     });
-    result.scores.performance -= 5;
     result.suggestions.push({
       priority: 'medium',
       title: 'Configure Caching',
       description: 'Add Cache-Control headers to improve repeat visit performance.',
       category: 'performance'
     });
+  } else {
+    // EARN points for caching
+    result.scores.performance += 10;
   }
 
   // Check for compression
@@ -376,13 +405,15 @@ const analyzeHeaders = (headers, result) => {
       description: 'Response is not compressed.',
       impact: 'Larger download size, slower loading.'
     });
-    result.scores.performance -= 5;
     result.suggestions.push({
       priority: 'low',
       title: 'Enable Compression',
       description: 'Enable gzip or brotli compression on your server.',
       category: 'performance'
     });
+  } else {
+    // EARN points for compression
+    result.scores.performance += 10;
   }
 };
 
@@ -450,13 +481,15 @@ const handleRequestError = (error, result) => {
 };
 
 /**
- * Calculate final scores
+ * Calculate final scores - PESSIMISTIC SCORING
+ * Start at 50, add points for good things, subtract for issues
+ * Max score is 95 (perfection is theoretical)
  */
 const calculateFinalScores = (result) => {
-  // Ensure scores don't go below 0
-  result.scores.performance = Math.max(0, result.scores.performance);
-  result.scores.error = Math.max(0, result.scores.error);
-  result.scores.durability = Math.max(0, result.scores.durability);
+  // Ensure scores stay within 0-95 bounds
+  result.scores.performance = Math.max(0, Math.min(95, result.scores.performance));
+  result.scores.error = Math.max(0, Math.min(95, result.scores.error));
+  result.scores.durability = Math.max(0, Math.min(95, result.scores.durability));
 
   // Calculate overall score (weighted average)
   result.scores.overall = Math.round(
@@ -465,8 +498,23 @@ const calculateFinalScores = (result) => {
     (result.scores.durability * 0.3)
   );
 
-  // Ensure overall is within bounds
-  result.scores.overall = Math.max(0, Math.min(100, result.scores.overall));
+  // Cap overall at 95 - perfection doesn't exist
+  result.scores.overall = Math.max(0, Math.min(95, result.scores.overall));
+  
+  // Set confidence based on what we could analyze
+  if (result.metrics.reachable && result.metrics.statusCode === 200) {
+    result.analysisConfidence = 'MEDIUM';
+  }
+  
+  // Always add a suggestion - never "no improvements needed"
+  if (result.suggestions.length === 0) {
+    result.suggestions.push({
+      priority: 'info',
+      title: 'Consider deeper analysis',
+      description: 'URL analysis is limited. For full insights, analyze your GitHub repository.',
+      category: 'general'
+    });
+  }
 };
 
 module.exports = {

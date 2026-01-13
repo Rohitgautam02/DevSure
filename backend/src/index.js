@@ -23,6 +23,9 @@ const errorHandler = require('./middlewares/errorHandler');
 // Initialize Express
 const app = express();
 
+// Trust proxy for Codespaces/reverse proxies
+app.set('trust proxy', 1);
+
 // ============================================
 // SECURITY MIDDLEWARE
 // ============================================
@@ -32,16 +35,28 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
 
-// CORS configuration - Allow all origins in development
+// CORS configuration - Allow all origins (required for GitHub Codespaces)
 app.use(cors({
-  origin: true,  // Allow all origins
+  origin: function(origin, callback) {
+    // Allow all origins including undefined (same-origin requests)
+    callback(null, true);
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400 // 24 hours
 }));
 
-// Handle preflight requests
-app.options('*', cors());
+// Handle preflight requests explicitly for all routes
+app.options('*', cors({
+  origin: function(origin, callback) {
+    callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+}));
 
 // Rate limiting
 const limiter = rateLimit({

@@ -11,13 +11,18 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio"
   },
-  "keywords": ["devsure", "project-analysis", "testing"],
+  "keywords": [
+    "devsure",
+    "project-analysis",
+    "testing"
+  ],
   "author": "DevSure Team",
   "license": "UNLICENSED",
   "dependencies": {
     "@prisma/client": "^5.7.0",
     "axios": "^1.6.2",
     "bcryptjs": "^2.4.3",
+    "chromium": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
@@ -25,6 +30,8 @@
     "express-validator": "^7.0.1",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
+    "lighthouse": "^13.0.1",
+    "puppeteer": "^24.34.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

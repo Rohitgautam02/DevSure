@@ -6,6 +6,14 @@
 const prisma = require('../config/prisma');
 
 /**
+ * Detect if URL is a GitHub repository
+ */
+const isGitHubRepo = (url) => {
+  return url.includes('github.com') && 
+    /github\.com\/[^\/]+\/[^\/\s\.]+/.test(url);
+};
+
+/**
  * Submit a new project for analysis
  * POST /api/projects/submit
  */
@@ -14,22 +22,27 @@ const submitProject = async (req, res, next) => {
     const { projectName, url } = req.body;
     const userId = req.user.id;
 
+    // Detect input type
+    const inputType = isGitHubRepo(url) ? 'github' : 'deployment';
+
     // Create project with PENDING status
     const project = await prisma.project.create({
       data: {
         userId,
         projectName,
         inputUrl: url,
+        inputType,
         status: 'PENDING'
       }
     });
 
     res.status(201).json({
-      message: 'Project submitted successfully. Analysis will begin shortly.',
+      message: `Project submitted successfully. ${inputType === 'github' ? 'Repository' : 'Deployment'} analysis will begin shortly.`,
       project: {
         id: project.id,
         projectName: project.projectName,
         inputUrl: project.inputUrl,
+        inputType: project.inputType,
         status: project.status,
         createdAt: project.createdAt
       }
@@ -178,6 +191,7 @@ const getProjectReport = async (req, res, next) => {
         id: project.id,
         projectName: project.projectName,
         inputUrl: project.inputUrl,
+        inputType: project.inputType,
         status: project.status,
         createdAt: project.createdAt
       },
@@ -186,6 +200,18 @@ const getProjectReport = async (req, res, next) => {
         performanceScore: project.analysisResult.performanceScore,
         errorScore: project.analysisResult.errorScore,
         durabilityScore: project.analysisResult.durabilityScore,
+        // Lighthouse scores
+        lighthousePerformance: project.analysisResult.lighthousePerformance,
+        lighthouseAccessibility: project.analysisResult.lighthouseAccessibility,
+        lighthouseBestPractices: project.analysisResult.lighthouseBestPractices,
+        lighthouseSeo: project.analysisResult.lighthouseSeo,
+        coreWebVitals: project.analysisResult.coreWebVitals,
+        lighthouseDetails: project.analysisResult.lighthouseDetails,
+        // GitHub analysis
+        githubAnalysis: project.analysisResult.githubAnalysis,
+        codeQualityScore: project.analysisResult.codeQualityScore,
+        securityScore: project.analysisResult.securityScore,
+        // Common fields
         issues: JSON.parse(project.analysisResult.issues),
         suggestions: JSON.parse(project.analysisResult.suggestions),
         metrics: JSON.parse(project.analysisResult.metrics),
