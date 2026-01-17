@@ -644,50 +644,50 @@ export default function ReportPage() {
                 <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
                   <div className="p-3 bg-white rounded-lg border">
                     <div className="text-xs text-gray-500">ESLint Errors</div>
-                    <div className={`text-xl font-bold ${report.githubAnalysis.rawMetrics.eslintErrors > 0 ? 'text-danger-600' : 'text-gray-400'}`}>
-                      {report.githubAnalysis.rawMetrics.eslintErrors}
+                    <div className={`text-xl font-bold ${(report.githubAnalysis.rawMetrics?.eslintErrors || 0) > 0 ? 'text-danger-600' : 'text-gray-400'}`}>
+                      {report.githubAnalysis.rawMetrics?.eslintErrors ?? 0}
                     </div>
                   </div>
                   <div className="p-3 bg-white rounded-lg border">
                     <div className="text-xs text-gray-500">ESLint Warnings</div>
-                    <div className={`text-xl font-bold ${report.githubAnalysis.rawMetrics.eslintWarnings > 5 ? 'text-warning-600' : 'text-gray-400'}`}>
-                      {report.githubAnalysis.rawMetrics.eslintWarnings}
+                    <div className={`text-xl font-bold ${(report.githubAnalysis.rawMetrics?.eslintWarnings || 0) > 5 ? 'text-warning-600' : 'text-gray-400'}`}>
+                      {report.githubAnalysis.rawMetrics?.eslintWarnings ?? 0}
                     </div>
                   </div>
                   <div className="p-3 bg-white rounded-lg border">
                     <div className="text-xs text-gray-500">Vulnerabilities</div>
-                    <div className={`text-xl font-bold ${report.githubAnalysis.rawMetrics.vulnerabilities.total > 0 ? 'text-danger-600' : 'text-gray-400'}`}>
-                      {report.githubAnalysis.rawMetrics.vulnerabilities.total}
+                    <div className={`text-xl font-bold ${(report.githubAnalysis.rawMetrics?.vulnerabilities?.total || 0) > 0 ? 'text-danger-600' : 'text-gray-400'}`}>
+                      {report.githubAnalysis.rawMetrics?.vulnerabilities?.total ?? 0}
                     </div>
                   </div>
                   <div className="p-3 bg-white rounded-lg border">
                     <div className="text-xs text-gray-500">Outdated Packages</div>
-                    <div className={`text-xl font-bold ${report.githubAnalysis.rawMetrics.outdatedDeps > 5 ? 'text-warning-600' : 'text-gray-400'}`}>
-                      {report.githubAnalysis.rawMetrics.outdatedDeps}
+                    <div className={`text-xl font-bold ${(report.githubAnalysis.rawMetrics?.outdatedDeps || 0) > 5 ? 'text-warning-600' : 'text-gray-400'}`}>
+                      {report.githubAnalysis.rawMetrics?.outdatedDeps ?? 0}
                     </div>
                   </div>
                   <div className="p-3 bg-white rounded-lg border">
                     <div className="text-xs text-gray-500">Has Tests</div>
-                    <div className={`text-xl font-bold ${report.githubAnalysis.rawMetrics.hasTests ? 'text-success-600' : 'text-danger-600'}`}>
-                      {report.githubAnalysis.rawMetrics.hasTests ? 'Yes' : 'No'}
+                    <div className={`text-xl font-bold ${report.githubAnalysis.rawMetrics?.hasTests ? 'text-success-600' : 'text-danger-600'}`}>
+                      {report.githubAnalysis.rawMetrics?.hasTests ? 'Yes' : 'No'}
                     </div>
                   </div>
                   <div className="p-3 bg-white rounded-lg border">
                     <div className="text-xs text-gray-500">TypeScript</div>
-                    <div className={`text-xl font-bold ${report.githubAnalysis.rawMetrics.hasTypeScript ? 'text-success-600' : 'text-gray-400'}`}>
-                      {report.githubAnalysis.rawMetrics.hasTypeScript ? 'Yes' : 'No'}
+                    <div className={`text-xl font-bold ${report.githubAnalysis.rawMetrics?.hasTypeScript ? 'text-success-600' : 'text-gray-400'}`}>
+                      {report.githubAnalysis.rawMetrics?.hasTypeScript ? 'Yes' : 'No'}
                     </div>
                   </div>
                   <div className="p-3 bg-white rounded-lg border">
                     <div className="text-xs text-gray-500">ESLint Configured</div>
-                    <div className={`text-xl font-bold ${report.githubAnalysis.rawMetrics.hasESLint ? 'text-success-600' : 'text-gray-400'}`}>
-                      {report.githubAnalysis.rawMetrics.hasESLint ? 'Yes' : 'No'}
+                    <div className={`text-xl font-bold ${report.githubAnalysis.rawMetrics?.hasESLint ? 'text-success-600' : 'text-gray-400'}`}>
+                      {report.githubAnalysis.rawMetrics?.hasESLint ? 'Yes' : 'No'}
                     </div>
                   </div>
                   <div className="p-3 bg-white rounded-lg border">
                     <div className="text-xs text-gray-500">Total Dependencies</div>
                     <div className="text-xl font-bold text-gray-600">
-                      {report.githubAnalysis.rawMetrics.totalDeps}
+                      {report.githubAnalysis.rawMetrics?.totalDeps ?? 0}
                     </div>
                   </div>
                 </div>
@@ -708,7 +708,7 @@ export default function ReportPage() {
               </div>
             )}
 
-            {report.githubAnalysis.security && report.githubAnalysis.security.vulnerabilities.total > 0 && (
+            {report.githubAnalysis.security && report.githubAnalysis.security.vulnerabilities?.total > 0 && (
               <div className="card mb-8">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-danger-600" />
