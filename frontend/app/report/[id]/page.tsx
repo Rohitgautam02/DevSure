@@ -708,7 +708,7 @@ export default function ReportPage() {
               </div>
             )}
 
-            {report.githubAnalysis?.security?.vulnerabilities?.total > 0 && (
+            {(report.githubAnalysis?.security?.vulnerabilities?.total ?? 0) > 0 && (
               <div className="card mb-8">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-danger-600" />
