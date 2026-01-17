@@ -532,8 +532,20 @@ const analyzePackageJson = async (repoDir, result) => {
     else if (deps.svelte) result.stack.framework = 'Svelte';
     else if (deps.nuxt) result.stack.framework = 'Nuxt.js';
 
-    // Check for ESLint
+    // Check for ESLint (both dependency and config files)
     result.stack.hasESLint = !!(deps.eslint || deps['@eslint/js']);
+    
+    // Also check for ESLint config files
+    if (!result.stack.hasESLint) {
+      const eslintConfigs = ['.eslintrc.js', '.eslintrc.json', '.eslintrc.yml', '.eslintrc.yaml', '.eslintrc', 'eslint.config.js', 'eslint.config.mjs', 'eslint.config.cjs'];
+      for (const config of eslintConfigs) {
+        try {
+          await fs.access(path.join(repoDir, config));
+          result.stack.hasESLint = true;
+          break;
+        } catch (e) {}
+      }
+    }
 
     // Check for tests
     result.stack.hasTests = !!(
@@ -734,7 +746,24 @@ const checkOutdatedPackages = async (repoDir, result) => {
 
     if (stdout && stdout.trim()) {
       const outdated = JSON.parse(stdout);
-      const packages = Object.entries(outdated);
+      
+      // Filter out packages where current >= latest (pre-release or forked versions)
+      // npm outdated shows these, but they're not really "outdated"
+      const packages = Object.entries(outdated).filter(([name, info]) => {
+        // Skip if current version is already >= latest (using beta/pre-release)
+        const current = info.current || '0.0.0';
+        const latest = info.latest || '0.0.0';
+        // Simple semver comparison: if current starts with higher number, skip
+        const currentMajor = parseInt(current.split('.')[0]) || 0;
+        const latestMajor = parseInt(latest.split('.')[0]) || 0;
+        if (currentMajor > latestMajor) return false;
+        if (currentMajor === latestMajor) {
+          const currentMinor = parseInt(current.split('.')[1]) || 0;
+          const latestMinor = parseInt(latest.split('.')[1]) || 0;
+          if (currentMinor > latestMinor) return false;
+        }
+        return true;
+      });
       
       result.dependencies.outdated = packages.length;
       result.dependencies.analyzed = true;  // Mark as analyzed
@@ -1400,16 +1429,14 @@ const getVerdict = (scores, repoType = 'application') => {
  * Check project structure for best practices
  */
 const checkProjectStructure = async (repoDir, result) => {
-  // Check for README
-  try {
-    await fs.access(path.join(repoDir, 'README.md'));
-    result.stack.hasReadme = true;
-  } catch (e) {
-    // Also check for readme.md (lowercase)
+  // Check for README (all common casings)
+  const readmeVariants = ['README.md', 'readme.md', 'Readme.md', 'README', 'readme', 'README.rst', 'README.txt'];
+  for (const readme of readmeVariants) {
     try {
-      await fs.access(path.join(repoDir, 'readme.md'));
+      await fs.access(path.join(repoDir, readme));
       result.stack.hasReadme = true;
-    } catch (e2) {}
+      break;
+    } catch (e) {}
   }
   
   // Check for LICENSE
