@@ -4,6 +4,7 @@ FROM node:18-slim
 # Install git and other dependencies needed for analysis
 RUN apt-get update && apt-get install -y \
     git \
+    openssl \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -15,8 +16,10 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci --only=production
 
-# Generate Prisma client
+# Copy prisma schema
 COPY prisma ./prisma/
+
+# Generate Prisma client
 RUN npx prisma generate
 
 # Copy source code
@@ -28,5 +31,5 @@ RUN mkdir -p /tmp && chmod 777 /tmp
 # Expose port
 EXPOSE 5000
 
-# Start the server
-CMD ["npm", "start"]
+# Run migrations and start the server
+CMD npx prisma db push --accept-data-loss && npm start
