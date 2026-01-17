@@ -506,44 +506,44 @@ export default function ReportPage() {
                 <div className="grid md:grid-cols-5 gap-4">
                   <ScoreCategory 
                     title="Security" 
-                    earned={report.githubAnalysis.scores.security} 
+                    earned={report.githubAnalysis.scores?.security ?? 0} 
                     max={30} 
                     icon="🔐" 
                     details={report.githubAnalysis.scoreDetails?.security?.details || []}
                   />
                   <ScoreCategory 
                     title="Code Quality" 
-                    earned={report.githubAnalysis.scores.codeQuality} 
+                    earned={report.githubAnalysis.scores?.codeQuality ?? 0} 
                     max={25} 
                     icon="🧹" 
                     details={report.githubAnalysis.scoreDetails?.codeQuality?.details || []}
                   />
                   <ScoreCategory 
                     title="Testing" 
-                    earned={report.githubAnalysis.scores.testing} 
+                    earned={report.githubAnalysis.scores?.testing ?? 0} 
                     max={20} 
                     icon="🧪" 
                     details={report.githubAnalysis.scoreDetails?.testing?.details || []}
                   />
                   <ScoreCategory 
                     title="Dependencies" 
-                    earned={report.githubAnalysis.scores.dependencies} 
+                    earned={report.githubAnalysis.scores?.dependencies ?? 0} 
                     max={10} 
                     icon="📦" 
                     details={report.githubAnalysis.scoreDetails?.dependencies?.details || []}
                   />
                   <ScoreCategory 
                     title="Hygiene" 
-                    earned={report.githubAnalysis.scores.hygiene} 
+                    earned={report.githubAnalysis.scores?.hygiene ?? 0} 
                     max={10} 
                     icon="📁" 
                     details={report.githubAnalysis.scoreDetails?.hygiene?.details || []}
                   />
                 </div>
-                {report.githubAnalysis.scores.confidenceMultiplier < 1 && (
+                {(report.githubAnalysis.scores?.confidenceMultiplier ?? 1) < 1 && (
                   <p className="text-xs text-gray-500 mt-2 text-center">
-                    Confidence multiplier applied: ×{report.githubAnalysis.scores.confidenceMultiplier} 
-                    (Raw: {report.githubAnalysis.scores.rawTotal} → Adjusted: {report.githubAnalysis.scores.overall})
+                    Confidence multiplier applied: ×{report.githubAnalysis.scores?.confidenceMultiplier ?? 1} 
+                    (Raw: {report.githubAnalysis.scores?.rawTotal ?? 0} → Adjusted: {report.githubAnalysis.scores?.overall ?? 0})
                   </p>
                 )}
               </div>
@@ -708,19 +708,19 @@ export default function ReportPage() {
               </div>
             )}
 
-            {report.githubAnalysis.security && report.githubAnalysis.security.vulnerabilities?.total > 0 && (
+            {report.githubAnalysis?.security?.vulnerabilities?.total > 0 && (
               <div className="card mb-8">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-danger-600" />
                   Security Vulnerabilities
                 </h2>
                 <div className="grid md:grid-cols-4 gap-4 mb-4">
-                  <VulnBadge severity="critical" count={report.githubAnalysis.security.vulnerabilities.critical} />
-                  <VulnBadge severity="high" count={report.githubAnalysis.security.vulnerabilities.high} />
-                  <VulnBadge severity="moderate" count={report.githubAnalysis.security.vulnerabilities.moderate} />
-                  <VulnBadge severity="low" count={report.githubAnalysis.security.vulnerabilities.low} />
+                  <VulnBadge severity="critical" count={report.githubAnalysis.security?.vulnerabilities?.critical ?? 0} />
+                  <VulnBadge severity="high" count={report.githubAnalysis.security?.vulnerabilities?.high ?? 0} />
+                  <VulnBadge severity="moderate" count={report.githubAnalysis.security?.vulnerabilities?.moderate ?? 0} />
+                  <VulnBadge severity="low" count={report.githubAnalysis.security?.vulnerabilities?.low ?? 0} />
                 </div>
-                {report.githubAnalysis.security.details.length > 0 && (
+                {report.githubAnalysis.security?.details?.length > 0 && (
                   <div className="mt-4">
                     <h3 className="text-sm font-semibold text-gray-700 mb-3">🔍 Vulnerable Packages</h3>
                     <div className="space-y-3 max-h-80 overflow-y-auto">
