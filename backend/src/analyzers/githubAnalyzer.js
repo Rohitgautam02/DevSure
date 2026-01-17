@@ -610,35 +610,37 @@ const detectRepoType = (pkg, repoDir) => {
     return 'cli';
   }
   
+  // Check if it's a known framework by name FIRST
+  // Many frameworks (like express) don't have main/module/exports
+  const frameworkKeywords = ['express', 'fastify', 'koa', 'hapi', 'nest', 'next', 'nuxt', 'gatsby', 'sails', 'loopback', 'meteor', 'adonis', 'strapi'];
+  const name = (pkg.name || '').toLowerCase();
+  const description = (pkg.description || '').toLowerCase();
+  
+  if (frameworkKeywords.some(kw => name.includes(kw)) || 
+      description.includes('framework') || 
+      description.includes('web framework')) {
+    return 'framework';
+  }
+  
   // Check for library indicators
   const isLibrary = 
-    // Has main/module/exports (library entry points)
-    (pkg.main || pkg.module || pkg.exports) &&
+    // Has main/module/exports (library entry points) OR is publishable
+    (pkg.main || pkg.module || pkg.exports || 
+     (!pkg.private && pkg.version && !pkg.scripts?.start)) &&
     // Does NOT have typical app entry points
     !pkg.scripts?.start?.includes('node server') &&
     !pkg.scripts?.start?.includes('node app') &&
     !pkg.scripts?.start?.includes('node src/index') &&
     !pkg.scripts?.start?.includes('next') &&
     !pkg.scripts?.start?.includes('react-scripts') &&
-    !pkg.scripts?.dev?.includes('next') &&
-    // Has build output typically for libraries
-    (pkg.scripts?.build?.includes('rollup') || 
-     pkg.scripts?.build?.includes('tsc') ||
-     pkg.scripts?.build?.includes('webpack') ||
-     pkg.scripts?.prepublish ||
-     pkg.scripts?.prepublishOnly);
+    !pkg.scripts?.dev?.includes('next');
   
   if (isLibrary) {
-    // Check if it's a framework (provides structure for apps)
-    const frameworkKeywords = ['express', 'fastify', 'koa', 'hapi', 'nest', 'next', 'nuxt', 'gatsby'];
-    const name = (pkg.name || '').toLowerCase();
-    const isFramework = frameworkKeywords.some(kw => name.includes(kw)) && pkg.main;
-    
-    return isFramework ? 'framework' : 'library';
+    return 'library';
   }
   
   // Check for monorepo
-  if (pkg.workspaces || pkg.lpierna || pkg.private === true && !pkg.main) {
+  if (pkg.workspaces || pkg.lerna || pkg.private === true && !pkg.main && !pkg.scripts?.start) {
     return 'monorepo';
   }
   
