@@ -720,11 +720,11 @@ export default function ReportPage() {
                   <VulnBadge severity="moderate" count={report.githubAnalysis.security?.vulnerabilities?.moderate ?? 0} />
                   <VulnBadge severity="low" count={report.githubAnalysis.security?.vulnerabilities?.low ?? 0} />
                 </div>
-                {report.githubAnalysis.security?.details?.length > 0 && (
+                {(report.githubAnalysis.security?.details?.length ?? 0) > 0 && (
                   <div className="mt-4">
                     <h3 className="text-sm font-semibold text-gray-700 mb-3">🔍 Vulnerable Packages</h3>
                     <div className="space-y-3 max-h-80 overflow-y-auto">
-                      {report.githubAnalysis.security.details.slice(0, 10).map((vuln, i) => (
+                      {report.githubAnalysis.security?.details?.slice(0, 10).map((vuln, i) => (
                         <div key={i} className={`p-3 rounded-lg border-l-4 ${
                           vuln.severity === 'critical' ? 'bg-danger-50 border-danger-600' :
                           vuln.severity === 'high' ? 'bg-danger-50 border-danger-400' :
