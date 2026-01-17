@@ -139,29 +139,34 @@ const processJob = async (project) => {
       const githubResult = await analyzeGitHubRepo(url);
       
       resultData.githubAnalysis = JSON.stringify(githubResult);
-      resultData.securityScore = githubResult.scores.security;
-      resultData.codeQualityScore = githubResult.scores.codeQuality;
-      resultData.overallScore = githubResult.scores.overall;
+      resultData.securityScore = githubResult.scores?.security ?? 0;
+      resultData.codeQualityScore = githubResult.scores?.codeQuality ?? 0;
+      resultData.overallScore = githubResult.scores?.overall ?? 0;
+      
+      // Log if analysis failed
+      if (!githubResult.success) {
+        console.error(`[JobRunner] GitHub analysis failed: ${githubResult.error}`);
+      }
       
       // Convert GitHub issues to standard format
       const issues = [];
       const suggestions = githubResult.suggestions || [];
       
       // Add vulnerability issues
-      if (githubResult.security.vulnerabilities.critical > 0) {
+      if ((githubResult.security?.vulnerabilities?.critical ?? 0) > 0) {
         issues.push({
           severity: 'critical',
           category: 'security',
-          title: `${githubResult.security.vulnerabilities.critical} Critical Vulnerabilities`,
+          title: `${githubResult.security?.vulnerabilities?.critical ?? 0} Critical Vulnerabilities`,
           description: 'Critical security vulnerabilities found in dependencies',
           impact: 'Your application may be vulnerable to attacks'
         });
       }
-      if (githubResult.security.vulnerabilities.high > 0) {
+      if ((githubResult.security?.vulnerabilities?.high ?? 0) > 0) {
         issues.push({
           severity: 'major',
           category: 'security',
-          title: `${githubResult.security.vulnerabilities.high} High Severity Vulnerabilities`,
+          title: `${githubResult.security?.vulnerabilities?.high ?? 0} High Severity Vulnerabilities`,
           description: 'High severity security issues in dependencies',
           impact: 'Security risk in your application'
         });

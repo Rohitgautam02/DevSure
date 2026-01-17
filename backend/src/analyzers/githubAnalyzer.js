@@ -118,10 +118,28 @@ const analyzeGitHubRepo = async (repoUrl) => {
       errors: 0
     },
     scores: {
-      security: 50,      // Start at 50, not 100
-      codeQuality: 50,
-      maintenance: 50,
-      overall: 50
+      security: 0,
+      codeQuality: 0,
+      testing: 0,
+      dependencies: 0,
+      hygiene: 0,
+      overall: 0,
+      rawTotal: 0,
+      confidenceMultiplier: 0.7,
+      maxPossible: 95
+    },
+    scoreDetails: {
+      security: { earned: 0, max: 30, details: ['⚠ Analysis could not complete'] },
+      codeQuality: { earned: 0, max: 25, details: ['⚠ Analysis could not complete'] },
+      testing: { earned: 0, max: 20, details: ['⚠ Analysis could not complete'] },
+      dependencies: { earned: 0, max: 10, details: ['⚠ Analysis could not complete'] },
+      hygiene: { earned: 0, max: 10, details: ['⚠ Analysis could not complete'] }
+    },
+    verdict: {
+      emoji: '❓',
+      label: 'Analysis Failed',
+      reason: 'Could not analyze repository',
+      color: 'warning'
     },
     rawMetrics: {},      // Raw numbers for transparency
     suggestions: [],
@@ -213,7 +231,15 @@ const analyzeGitHubRepo = async (repoUrl) => {
 
   } catch (error) {
     console.error(`[GitHub] ❌ Error:`, error.message);
+    console.error(`[GitHub] ❌ Stack:`, error.stack);
     result.error = error.message;
+    result.verdict = {
+      emoji: '❌',
+      label: 'Analysis Failed',
+      reason: `Error: ${error.message}`,
+      color: 'danger'
+    };
+    result.scoreDetails.security.details = [`❌ ${error.message}`];
   } finally {
     // Cleanup: Remove cloned repo
     try {
