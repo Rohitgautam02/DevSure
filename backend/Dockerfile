@@ -31,5 +31,9 @@ RUN mkdir -p /tmp && chmod 777 /tmp
 # Expose port
 EXPOSE 5000
 
-# Run migrations and start the server
-CMD npx prisma db push --accept-data-loss && npm start
+# Copy start script and make executable
+COPY start.sh ./
+RUN chmod +x start.sh
+
+# Run startup script (migrations + server)
+CMD ["./start.sh"]
